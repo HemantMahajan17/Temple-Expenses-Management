@@ -1,0 +1,64 @@
+<script>
+    if (localStorage.getItem("isLoggedIn") !== "true") {
+      window.location.href = "../login.html";
+    }
+  </script>
+  
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Temple Reports</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-blue-700 text-white p-4">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-2xl font-bold">📊 Temple Reports</h1>
+      <a href="dashboard.html" class="text-white underline hover:text-gray-300">Back to Dashboard</a>
+    </div>
+  </header>
+
+  <!-- Summary Cards -->
+  <main class="container mx-auto p-6">
+    <div class="grid gap-6 md:grid-cols-3 mb-8">
+      <div class="bg-green-100 p-6 rounded shadow text-center">
+        <h2 class="text-xl font-bold text-green-800">Total Donations</h2>
+        <p id="totalDonations" class="text-3xl mt-2 font-bold">₹0</p>
+      </div>
+      <div class="bg-red-100 p-6 rounded shadow text-center">
+        <h2 class="text-xl font-bold text-red-800">Total Expenses</h2>
+        <p id="totalExpenses" class="text-3xl mt-2 font-bold">₹0</p>
+      </div>
+      <div class="bg-yellow-100 p-6 rounded shadow text-center">
+        <h2 class="text-xl font-bold text-yellow-800">Remaining Balance</h2>
+        <p id="balance" class="text-3xl mt-2 font-bold">₹0</p>
+      </div>
+    </div>
+
+    <!-- Placeholder Message -->
+    <div class="text-gray-600 text-center">
+      <p>This is a basic summary. In future, we can add filters by date, donor, category etc.</p>
+    </div>
+  </main>
+
+  <!-- Data Simulation -->
+  <script>
+    // Simulated totals from storage (replace later with actual storage)
+    const donations = JSON.parse(localStorage.getItem("donations")) || [];
+    const expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+
+    const totalDonationAmount = donations.reduce((sum, d) => sum + Number(d.amount), 0);
+    const totalExpenseAmount = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+    const balance = totalDonationAmount - totalExpenseAmount;
+
+    document.getElementById("totalDonations").textContent = `₹${totalDonationAmount}`;
+    document.getElementById("totalExpenses").textContent = `₹${totalExpenseAmount}`;
+    document.getElementById("balance").textContent = `₹${balance}`;
+  </script>
+
+</body>
+</html>

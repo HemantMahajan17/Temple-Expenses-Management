@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Donations - Temple Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+  <script>
+    if (localStorage.getItem("isLoggedIn") !== "true") {
+      window.location.href = "../login.html";
+    }
+  </script>
+
+  <header class="bg-blue-700 text-white p-4 flex justify-between items-center">
+    <h1 class="text-2xl font-bold">Donations</h1>
+    <a href="dashboard.html" class="text-white underline hover:text-gray-300">Back to Dashboard</a>
+  </header>
+
+  <main class="container mx-auto p-6">
+    <section class="bg-white p-6 rounded shadow max-w-xl mx-auto">
+      <h2 class="text-xl font-semibold mb-4" id="formTitle">Add New Donation</h2>
+      <form id="donationForm" class="space-y-4">
+        <input type="hidden" id="editIndex" value="-1" />
+        <div>
+          <label for="donorName" class="block font-medium mb-1">Donor Name</label>
+          <input type="text" id="donorName" required class="w-full border border-gray-300 rounded px-3 py-2" />
+        </div>
+
+        <div>
+          <label for="amount" class="block font-medium mb-1">Amount (₹)</label>
+          <input type="number" id="amount" min="1" required class="w-full border border-gray-300 rounded px-3 py-2" />
+        </div>
+
+        <div>
+          <label for="date" class="block font-medium mb-1">Date</label>
+          <input type="date" id="date" required class="w-full border border-gray-300 rounded px-3 py-2" />
+        </div>
+
+        <div>
+          <label for="remarks" class="block font-medium mb-1">Remarks (optional)</label>
+          <textarea id="remarks" class="w-full border border-gray-300 rounded px-3 py-2" rows="2"></textarea>
+        </div>
+
+        <button type="submit" class="bg-blue-700 text-white py-2 rounded w-full hover:bg-blue-800 transition" id="submitBtn">
+          Add Donation
+        </button>
+        <button type="button" id="cancelEditBtn" class="hidden bg-gray-500 text-white py-2 rounded w-full hover:bg-gray-600 transition mt-2">Cancel Edit</button>
+      </form>
+    </section>
+
+    <section class="mt-10 max-w-3xl mx-auto">
+      <h2 class="text-xl font-semibold mb-4">Donations List</h2>
+      <table class="min-w-full bg-white rounded shadow">
+        <thead>
+          <tr class="bg-blue-700 text-white text-left">
+            <th class="px-4 py-2">Donor Name</th>
+            <th class="px-4 py-2">Amount (₹)</th>
+            <th class="px-4 py-2">Date</th>
+            <th class="px-4 py-2">Remarks</th>
+            <th class="px-4 py-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="donationsTableBody"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    const { jsPDF } = window.jspdf;
+
+    const logoutBtn = document.getElementById("logoutBtn");
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("isLoggedIn");
+      window.location.href = "../login.html";
+    });
+
+    const donationForm = document.getElementById("donationForm");
+    const donationsTableBody = document.getElementById("donationsTableBody");
+    const formTitle = document.getElementById("formTitle");
+    const submitBtn = document.getElementById("submitBtn");
+    const cancelEditBtn = document.getElementById("cancelEditBtn");
+    const editIndexInput = document.getElementById("editIndex");
+
+    let donations = JSON.parse(localStorage.getItem("donations")) || [];
+
+    function renderDonations() {
+      donationsTableBody.innerHTML = "";
+      donations.forEach((donation, index) => {
+        const tr = document.createElement("tr");
+        tr.classList.add("border-b");
+        tr.innerHTML = `
+          <td class="px-4 py-2">${donation.donorName}</td>
+          <td class="px-4 py-2">₹${donation.amount}</td>
+          <td class="px-4 py-2">${donation.date}</td>
+          <td class="px-4 py-2">${donation.remarks || ""}</td>
+          <td class="px-4 py-2 space-x-2">
+            <button data-index="${index}" class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 receiptBtn">Receipt</button>
+            <button data-index="${index}" class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 editBtn">Edit</button>
+            <button data-index="${index}" class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 deleteBtn">Delete</button>
+          </td>
+        `;
+        donationsTableBody.appendChild(tr);
+      });
+
+      document.querySelectorAll(".receiptBtn").forEach(btn => {
+        btn.addEventListener("click", e => {
+          const idx = e.target.getAttribute("data-index");
+          generatePDF(donations[idx]);
+        });
+      });
+
+      document.querySelectorAll(".editBtn").forEach(btn => {
+        btn.addEventListener("click", e => {
+          const idx = e.target.getAttribute("data-index");
+          startEditDonation(idx);
+        });
+      });
+
+      document.querySelectorAll(".deleteBtn").forEach(btn => {
+        btn.addEventListener("click", e => {
+          const idx = e.target.getAttribute("data-index");
+          if (confirm("Are you sure you want to delete this donation?")) {
+            donations.splice(idx, 1);
+            saveAndRender();
+          }
+        });
+      });
+    }
+
+    function saveAndRender() {
+      localStorage.setItem("donations", JSON.stringify(donations));
+      renderDonations();
+      resetForm();
+    }
+
+    function resetForm() {
+      donationForm.reset();
+      editIndexInput.value = -1;
+      formTitle.textContent = "Add New Donation";
+      submitBtn.textContent = "Add Donation";
+      cancelEditBtn.classList.add("hidden");
+    }
+
+    function startEditDonation(index) {
+      const donation = donations[index];
+      donationForm.donorName.value = donation.donorName;
+      donationForm.amount.value = donation.amount;
+      donationForm.date.value = donation.date;
+      donationForm.remarks.value = donation.remarks;
+      editIndexInput.value = index;
+      formTitle.textContent = "Edit Donation";
+      submitBtn.textContent = "Save Changes";
+      cancelEditBtn.classList.remove("hidden");
+    }
+
+    cancelEditBtn.addEventListener("click", () => {
+      resetForm();
+    });
+
+    donationForm.addEventListener("submit", e => {
+      e.preventDefault();
+
+      const newDonation = {
+        donorName: donationForm.donorName.value.trim(),
+        amount: parseFloat(donationForm.amount.value),
+        date: donationForm.date.value,
+        remarks: donationForm.remarks.value.trim()
+      };
+
+      const editIndex = parseInt(editIndexInput.value);
+      if (editIndex === -1) {
+        // Add new
+        donations.push(newDonation);
+      } else {
+        // Update existing
+        donations[editIndex] = newDonation;
+      }
+
+      saveAndRender();
+    });
+
+    function generatePDF(donation) {
+      const doc = new jsPDF();
+
+      doc.setFontSize(18);
+      doc.text("Temple Donation Receipt", 20, 20);
+
+      doc.setFontSize(12);
+      doc.text(`Donor Name: ${donation.donorName}`, 20, 40);
+      doc.text(`Amount: ₹${donation.amount}`, 20, 50);
+      doc.text(`Date: ${donation.date}`, 20, 60);
+      doc.text(`Remarks: ${donation.remarks || "None"}`, 20, 70);
+
+      doc.setFontSize(14);
+      doc.text("Thank you for your generous support!", 20, 90);
+
+      doc.save(`DonationReceipt_${donation.donorName}_${donation.date}.pdf`);
+    }
+
+    renderDonations();
+  </script>
+</body>
+</html>

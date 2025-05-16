@@ -1,0 +1,72 @@
+<script>
+    if (localStorage.getItem("isLoggedIn") !== "true") {
+      window.location.href = "../login.html";
+    }
+  </script>
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Temple Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <header class="bg-blue-700 text-white p-4 flex justify-between items-center">
+        <h1 class="text-2xl font-bold">Dashboard</h1>
+        <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded">Logout</button>
+      </header>
+      
+      <script>
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+          localStorage.removeItem("isLoggedIn");
+          window.location.href = "../login.html";
+        });
+      </script>
+      
+
+  <!-- Main Content -->
+  <main class="p-6 container mx-auto">
+    <div class="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-6">
+
+      <!-- Donation Management -->
+      <a href="donations.html" class="bg-white p-6 rounded shadow hover:shadow-lg transition">
+        <h2 class="text-xl font-semibold text-blue-700 mb-2">🧾 Donations</h2>
+        <p class="text-gray-700">View and add donor entries, send receipts.</p>
+      </a>
+
+      <!-- Expenses -->
+      <a href="expenses.html" class="bg-white p-6 rounded shadow hover:shadow-lg transition">
+        <h2 class="text-xl font-semibold text-blue-700 mb-2">💸 Expenses</h2>
+        <p class="text-gray-700">Track temple spending and maintain logs.</p>
+      </a>
+
+      <!-- Events -->
+      <a href="events.html" class="bg-white p-6 rounded shadow hover:shadow-lg transition">
+        <h2 class="text-xl font-semibold text-blue-700 mb-2">📅 Events</h2>
+        <p class="text-gray-700">Add past and upcoming events with details.</p>
+      </a>
+
+      <!-- Donor Records -->
+      <a href="donors.html" class="bg-white p-6 rounded shadow hover:shadow-lg transition">
+        <h2 class="text-xl font-semibold text-blue-700 mb-2">👤 Donors</h2>
+        <p class="text-gray-700">List all donors and their donation history.</p>
+      </a>
+
+      <!-- Reports (optional) -->
+      <a href="reports.html" class="bg-white p-6 rounded shadow hover:shadow-lg transition">
+        <h2 class="text-xl font-semibold text-blue-700 mb-2">📊 Reports</h2>
+        <p class="text-gray-700">Download summaries of donations & expenses.</p>
+      </a>
+
+    </div>
+  </main>
+
+  <script>
+    function logout() {
+      window.location.href = "login.html";
+    }
+  </script>
+</body>
+</html>

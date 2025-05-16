@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Temple Admin Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+  <div class="bg-white p-8 rounded shadow-md w-96">
+    <h2 class="text-2xl font-bold mb-6 text-center text-blue-800"> Admin Login</h2>
+
+    <form id="loginForm" class="space-y-4">
+      <div>
+        <label for="username" class="block mb-1 font-medium">Username</label>
+        <input id="username" type="text" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600" />
+      </div>
+
+      <div>
+        <label for="password" class="block mb-1 font-medium">Password</label>
+        <input id="password" type="password" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600" />
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Login</button>
+      <button onclick="window.location.href='/index.html'" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+        Back to Home Page
+      </button>
+      
+    </form>
+  </div>
+
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      // TODO: Replace with real authentication
+      if (username === "admin" && password === "temple123") {
+        localStorage.setItem("isLoggedIn", "true");
+        window.location.href = "../admin/dashboard.html";
+      } else {
+        alert("Invalid username or password");
+      }
+    });
+  </script>
+
+</body>
+</html>
