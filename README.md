@@ -181,3 +181,4 @@ Email: [hpmahajan2013@gmail.com](mailto:hpmahajan2013@gmail.com)
 
 Thank you for using the Temple Management System!
 
+---
