@@ -181,11 +181,3 @@ Phone: +91 8805700570
 
 Thank you for using the Temple Management System!
 
-```
-
----
-
-**Save this as `README.md` at the root of your project folder.**
-
-If you want, I can help generate this in markdown file format ready to download. Would you like that?
-```
