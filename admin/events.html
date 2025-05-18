@@ -2,166 +2,132 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Events - Temple Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Temple Events</title>
+  <link rel="stylesheet" href="/assets/css/style.css" />
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
 
-  <script>
-    if (localStorage.getItem("isLoggedIn") !== "true") {
-      window.location.href = "../login.html";
-    }
-  </script>
+<header class="bg-blue-700 text-white p-4 flex justify-between">
+  <h1 class="text-xl font-bold">📅 Temple Events</h1>
+  <a href="dashboard.html" class="hover:underline">Back to Dashboard</a>
+</header>
 
-  <header class="bg-blue-700 text-white p-4 flex justify-between items-center">
-    <h1 class="text-2xl font-bold">Events</h1>
-    <a href="dashboard.html" class="text-white underline hover:text-gray-300">Back to Dashboard</a>
-  </header>
+<main class="container mx-auto p-6">
+  <section class="bg-white p-6 rounded shadow mb-6">
+    <h2 class="text-lg font-bold mb-4">Add New Event</h2>
+    <form id="eventForm" class="grid gap-4 md:grid-cols-2">
+      <input type="hidden" id="eventId" />
+      <input type="text" id="name" placeholder="Event Name" required class="p-2 border rounded" />
+      <input type="date" id="date" required class="p-2 border rounded" />
+      <input type="number" id="budget" placeholder="Budget (₹)" class="p-2 border rounded" />
+      <input type="text" id="coordinator" placeholder="Coordinator Name" class="p-2 border rounded" />
+      <select id="status" class="p-2 border rounded">
+        <option value="active">Active</option>
+        <option value="completed">Completed</option>
+      </select>
+      <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 md:col-span-2">💾 Save Event</button>
+    </form>
+  </section>
 
-  <main class="container mx-auto p-6">
-    <section class="bg-white p-6 rounded shadow max-w-xl mx-auto">
-      <h2 class="text-xl font-semibold mb-4" id="formTitle">Add New Event</h2>
-      <form id="eventForm" class="space-y-4">
-        <input type="hidden" id="editIndex" value="-1" />
-        <div>
-          <label for="eventTitle" class="block font-medium mb-1">Event Title</label>
-          <input type="text" id="eventTitle" required class="w-full border border-gray-300 rounded px-3 py-2" />
-        </div>
+  <section class="bg-white p-6 rounded shadow">
+    <h2 class="text-lg font-bold mb-4">Event List</h2>
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-blue-100">
+          <th class="p-2 border">Name</th>
+          <th class="p-2 border">Date</th>
+          <th class="p-2 border">Budget</th>
+          <th class="p-2 border">Coordinator</th>
+          <th class="p-2 border">Status</th>
+          <th class="p-2 border">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="eventList"></tbody>
+    </table>
+  </section>
+</main>
 
-        <div>
-          <label for="eventDate" class="block font-medium mb-1">Date</label>
-          <input type="date" id="eventDate" required class="w-full border border-gray-300 rounded px-3 py-2" />
-        </div>
+<script>
+  const form = document.getElementById('eventForm');
+  const eventList = document.getElementById('eventList');
+  let events = [];
 
-        <div>
-          <label for="eventDescription" class="block font-medium mb-1">Description</label>
-          <textarea id="eventDescription" required class="w-full border border-gray-300 rounded px-3 py-2" rows="3"></textarea>
-        </div>
-
-        <button type="submit" class="bg-blue-700 text-white py-2 rounded w-full hover:bg-blue-800 transition" id="submitBtn">
-          Add Event
-        </button>
-        <button type="button" id="cancelEditBtn" class="hidden bg-gray-500 text-white py-2 rounded w-full hover:bg-gray-600 transition mt-2">Cancel Edit</button>
-      </form>
-    </section>
-
-    <section class="mt-10 max-w-4xl mx-auto">
-      <h2 class="text-xl font-semibold mb-4">Events List</h2>
-      <table class="min-w-full bg-white rounded shadow">
-        <thead>
-          <tr class="bg-blue-700 text-white text-left">
-            <th class="px-4 py-2">Title</th>
-            <th class="px-4 py-2">Date</th>
-            <th class="px-4 py-2">Description</th>
-            <th class="px-4 py-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="eventsTableBody"></tbody>
-      </table>
-    </section>
-  </main>
-
-  <script>
-    const logoutBtn = document.getElementById("logoutBtn");
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("isLoggedIn");
-      window.location.href = "../login.html";
-    });
-
-    const eventForm = document.getElementById("eventForm");
-    const eventsTableBody = document.getElementById("eventsTableBody");
-    const formTitle = document.getElementById("formTitle");
-    const submitBtn = document.getElementById("submitBtn");
-    const cancelEditBtn = document.getElementById("cancelEditBtn");
-    const editIndexInput = document.getElementById("editIndex");
-
-    let events = JSON.parse(localStorage.getItem("events")) || [];
-
-    function renderEvents() {
-      eventsTableBody.innerHTML = "";
-      events.forEach((event, index) => {
-        const tr = document.createElement("tr");
-        tr.classList.add("border-b");
-        tr.innerHTML = `
-          <td class="px-4 py-2">${event.title}</td>
-          <td class="px-4 py-2">${event.date}</td>
-          <td class="px-4 py-2">${event.description}</td>
-          <td class="px-4 py-2 space-x-2">
-            <button data-index="${index}" class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 editBtn">Edit</button>
-            <button data-index="${index}" class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 deleteBtn">Delete</button>
-          </td>
-        `;
-        eventsTableBody.appendChild(tr);
-      });
-
-      document.querySelectorAll(".editBtn").forEach(btn => {
-        btn.addEventListener("click", e => {
-          const idx = e.target.getAttribute("data-index");
-          startEditEvent(idx);
-        });
-      });
-
-      document.querySelectorAll(".deleteBtn").forEach(btn => {
-        btn.addEventListener("click", e => {
-          const idx = e.target.getAttribute("data-index");
-          if (confirm("Are you sure you want to delete this event?")) {
-            events.splice(idx, 1);
-            saveAndRender();
-          }
-        });
-      });
-    }
-
-    function saveAndRender() {
-      localStorage.setItem("events", JSON.stringify(events));
-      renderEvents();
-      resetForm();
-    }
-
-    function resetForm() {
-      eventForm.reset();
-      editIndexInput.value = -1;
-      formTitle.textContent = "Add New Event";
-      submitBtn.textContent = "Add Event";
-      cancelEditBtn.classList.add("hidden");
-    }
-
-    function startEditEvent(index) {
-      const event = events[index];
-      eventForm.eventTitle.value = event.title;
-      eventForm.eventDate.value = event.date;
-      eventForm.eventDescription.value = event.description;
-      editIndexInput.value = index;
-      formTitle.textContent = "Edit Event";
-      submitBtn.textContent = "Save Changes";
-      cancelEditBtn.classList.remove("hidden");
-    }
-
-    cancelEditBtn.addEventListener("click", () => {
-      resetForm();
-    });
-
-    eventForm.addEventListener("submit", e => {
-      e.preventDefault();
-
-      const newEvent = {
-        title: eventForm.eventTitle.value.trim(),
-        date: eventForm.eventDate.value,
-        description: eventForm.eventDescription.value.trim()
-      };
-
-      const editIndex = parseInt(editIndexInput.value);
-      if (editIndex === -1) {
-        events.push(newEvent);
-      } else {
-        events[editIndex] = newEvent;
-      }
-
-      saveAndRender();
-    });
-
+  async function loadEvents() {
+    const res = await fetch('/api/events');
+    events = await res.json();
     renderEvents();
-  </script>
+  }
+
+  function renderEvents() {
+    eventList.innerHTML = '';
+    events.forEach(e => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td class="border p-2">${e.name}</td>
+        <td class="border p-2">${e.date}</td>
+        <td class="border p-2">₹${e.budget || 0}</td>
+        <td class="border p-2">${e.coordinator || ''}</td>
+        <td class="border p-2">${e.status}</td>
+        <td class="border p-2">
+          <button onclick="editEvent('${e.id}')" class="text-blue-600 hover:underline">Edit</button>
+          <button onclick="deleteEvent('${e.id}')" class="text-red-600 hover:underline ml-2">Delete</button>
+        </td>
+      `;
+      eventList.appendChild(row);
+    });
+  }
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const event = {
+      name: form.name.value,
+      date: form.date.value,
+      budget: form.budget.value,
+      coordinator: form.coordinator.value,
+      status: form.status.value,
+    };
+    const id = form.eventId.value;
+
+    if (id) {
+      await fetch(`/api/events/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(event)
+      });
+    } else {
+      await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(event)
+      });
+    }
+
+    form.reset();
+    form.eventId.value = '';
+    loadEvents();
+  };
+
+  async function editEvent(id) {
+    const res = await fetch(`/api/events/${id}`);
+    const event = await res.json();
+    form.eventId.value = event.id;
+    form.name.value = event.name;
+    form.date.value = event.date;
+    form.budget.value = event.budget;
+    form.coordinator.value = event.coordinator;
+    form.status.value = event.status;
+    window.scrollTo(0, 0);
+  }
+
+  async function deleteEvent(id) {
+    if (!confirm('Are you sure you want to delete this event?')) return;
+    await fetch(`/api/events/${id}`, { method: 'DELETE' });
+    loadEvents();
+  }
+
+  window.addEventListener('DOMContentLoaded', loadEvents);
+</script>
 </body>
 </html>

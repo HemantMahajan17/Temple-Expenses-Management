@@ -1,99 +1,73 @@
-<script>
-    if (localStorage.getItem("isLoggedIn") !== "true") {
-      window.location.href = "../login.html";
-    }
-  </script>
-  
-  
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Donor Management</title>
+  <title>Donors Summary</title>
+  <link rel="stylesheet" href="/assets/css/style.css" />
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
 
-  <!-- Header -->
-  <header class="bg-blue-700 text-white p-4">
-    <div class="container mx-auto flex justify-between items-center">
-      <h1 class="text-2xl font-bold">👤 Manage Donors</h1>
-      <a href="dashboard.html" class="text-white underline hover:text-gray-300">Back to Dashboard</a>
-    </div>
-  </header>
+<header class="bg-blue-700 text-white p-4 flex justify-between">
+  <h1 class="text-xl font-bold">🙏 Donors Summary</h1>
+  <a href="dashboard.html" class="hover:underline">Back to Dashboard</a>
+</header>
 
-  <!-- Donor Form -->
-  <main class="container mx-auto p-6">
-    <div class="bg-white p-6 rounded shadow mb-8">
-      <h2 class="text-xl font-semibold mb-4 text-blue-700">Add New Donor</h2>
-      <form id="donorForm" class="grid gap-4 md:grid-cols-2">
-        <input type="text" placeholder="Full Name" id="name" required class="border rounded p-2 w-full" />
-        <input type="text" placeholder="Mobile Number" id="mobile" required class="border rounded p-2 w-full" />
-        <input type="email" placeholder="Email (optional)" id="email" class="border rounded p-2 w-full" />
-        <textarea id="address" placeholder="Address (optional)" class="border rounded p-2 col-span-2 w-full"></textarea>
-        <button type="submit" class="bg-blue-700 text-white py-2 px-4 rounded col-span-2 hover:bg-blue-800">
-          Add Donor
-        </button>
-      </form>
-    </div>
+<main class="container mx-auto p-6">
+  <div class="flex justify-between items-center mb-4">
+    <input type="text" id="search" placeholder="Search donor..." class="border p-2 rounded w-full max-w-md" />
+    <button id="exportBtn" class="ml-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">📤 Export to Excel</button>
+  </div>
 
-    <!-- Search & Donor List -->
-    <div class="bg-white p-6 rounded shadow">
-      <div class="mb-4">
-        <input type="text" id="search" placeholder="Search by name or mobile" class="border rounded p-2 w-full" />
-      </div>
-      <ul id="donorList" class="space-y-4">
-        <!-- Donors will appear here -->
-      </ul>
-    </div>
-  </main>
+  <section class="bg-white p-6 rounded shadow">
+    <ul id="donorList" class="space-y-4"></ul>
+  </section>
+</main>
 
-  <script>
-    const donorForm = document.getElementById('donorForm');
-    const donorList = document.getElementById('donorList');
-    const search = document.getElementById('search');
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+  const donorList = document.getElementById('donorList');
+  const search = document.getElementById('search');
+  let donors = [];
 
-    const donors = [];
+  async function loadDonors() {
+    const res = await fetch('/api/derived-donors');
+    donors = await res.json();
+    displayDonors(donors);
+  }
 
-    donorForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-
-      const name = donorForm.name.value.trim();
-      const mobile = donorForm.mobile.value.trim();
-      const email = donorForm.email.value.trim();
-      const address = donorForm.address.value.trim();
-
-      const donor = { name, mobile, email, address };
-      donors.push(donor);
-
-      displayDonors(donors);
-      donorForm.reset();
+  function displayDonors(list) {
+    donorList.innerHTML = '';
+    list.forEach(d => {
+      const li = document.createElement('li');
+      li.className = 'border p-4 rounded bg-white shadow-sm';
+      li.innerHTML = `
+        <h3 class="text-lg font-semibold text-blue-800">${d.name}</h3>
+        <p>📞 ${d.mobile} ${d.email ? `| 📧 ${d.email}` : ''}</p>
+        <p>${d.address ? `🏠 ${d.address}` : ''}</p>
+        <p>🪙 Total Donated: ₹${d.totalAmount} | 🧾 Donations: ${d.count}</p>
+      `;
+      donorList.appendChild(li);
     });
+  }
 
-    search.addEventListener('input', () => {
-      const term = search.value.toLowerCase();
-      const filtered = donors.filter(d =>
-        d.name.toLowerCase().includes(term) || d.mobile.includes(term)
-      );
-      displayDonors(filtered);
-    });
+  search.addEventListener('input', () => {
+    const term = search.value.toLowerCase();
+    const filtered = donors.filter(d =>
+      d.name.toLowerCase().includes(term) || d.mobile.includes(term)
+    );
+    displayDonors(filtered);
+  });
 
-    function displayDonors(list) {
-      donorList.innerHTML = '';
-      list.forEach(d => {
-        const li = document.createElement('li');
-        li.className = "border p-4 rounded bg-blue-50";
-        li.innerHTML = `
-          <h3 class="text-lg font-bold text-blue-800">${d.name}</h3>
-          <p class="text-gray-700">📞 ${d.mobile}</p>
-          ${d.email ? `<p class="text-gray-600">📧 ${d.email}</p>` : ''}
-          ${d.address ? `<p class="text-gray-600">🏠 ${d.address}</p>` : ''}
-        `;
-        donorList.appendChild(li);
-      });
-    }
-  </script>
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const ws = XLSX.utils.json_to_sheet(donors);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Donors");
+    XLSX.writeFile(wb, "Donors_Summary.xlsx");
+  });
 
+  window.addEventListener('DOMContentLoaded', loadDonors);
+</script>
 </body>
 </html>

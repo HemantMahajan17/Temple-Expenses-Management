@@ -1,64 +1,147 @@
-<script>
-    if (localStorage.getItem("isLoggedIn") !== "true") {
-      window.location.href = "../login.html";
-    }
-  </script>
-  
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Temple Reports</title>
+  <link rel="stylesheet" href="/assets/css/style.css" />
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
 
-  <!-- Header -->
-  <header class="bg-blue-700 text-white p-4">
-    <div class="container mx-auto flex justify-between items-center">
-      <h1 class="text-2xl font-bold">📊 Temple Reports</h1>
-      <a href="dashboard.html" class="text-white underline hover:text-gray-300">Back to Dashboard</a>
-    </div>
-  </header>
+<header class="bg-blue-700 text-white p-4 flex justify-between">
+  <h1 class="text-xl font-bold">📊 Temple Reports</h1>
+  <a href="dashboard.html" class="hover:underline">Back to Dashboard</a>
+</header>
 
-  <!-- Summary Cards -->
-  <main class="container mx-auto p-6">
-    <div class="grid gap-6 md:grid-cols-3 mb-8">
-      <div class="bg-green-100 p-6 rounded shadow text-center">
-        <h2 class="text-xl font-bold text-green-800">Total Donations</h2>
-        <p id="totalDonations" class="text-3xl mt-2 font-bold">₹0</p>
+<main class="container mx-auto p-6">
+  <section class="bg-white p-6 rounded shadow mb-6">
+    <h2 class="text-lg font-bold mb-4">Select Event for Report</h2>
+    <select id="eventSelect" class="p-2 border rounded w-full max-w-md">
+      <option value="">-- All Events --</option>
+    </select>
+  </section>
+
+  <section class="bg-white p-6 rounded shadow mb-6">
+    <h2 class="text-lg font-bold mb-4">Summary</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-green-100 p-4 rounded text-center">
+        <p class="text-lg font-semibold">₹<span id="donationTotal">0</span></p>
+        <p class="text-sm">Total Donations</p>
       </div>
-      <div class="bg-red-100 p-6 rounded shadow text-center">
-        <h2 class="text-xl font-bold text-red-800">Total Expenses</h2>
-        <p id="totalExpenses" class="text-3xl mt-2 font-bold">₹0</p>
+      <div class="bg-red-100 p-4 rounded text-center">
+        <p class="text-lg font-semibold">₹<span id="expenseTotal">0</span></p>
+        <p class="text-sm">Total Expenses</p>
       </div>
-      <div class="bg-yellow-100 p-6 rounded shadow text-center">
-        <h2 class="text-xl font-bold text-yellow-800">Remaining Balance</h2>
-        <p id="balance" class="text-3xl mt-2 font-bold">₹0</p>
+      <div class="bg-yellow-100 p-4 rounded text-center">
+        <p class="text-lg font-semibold">₹<span id="balanceTotal">0</span></p>
+        <p class="text-sm">Balance</p>
       </div>
     </div>
+  </section>
 
-    <!-- Placeholder Message -->
-    <div class="text-gray-600 text-center">
-      <p>This is a basic summary. In future, we can add filters by date, donor, category etc.</p>
+  <section class="bg-white p-6 rounded shadow">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-lg font-bold">Donations & Expenses</h2>
+      <div>
+        <button onclick="exportToExcel()" class="bg-blue-600 text-white px-3 py-1 rounded mr-2">📤 Excel</button>
+        <button onclick="window.print()" class="bg-gray-700 text-white px-3 py-1 rounded">🖨️ Print</button>
+      </div>
     </div>
-  </main>
+    <div class="overflow-x-auto">
+      <table class="w-full border text-left">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="border px-3 py-2">Type</th>
+            <th class="border px-3 py-2">Name</th>
+            <th class="border px-3 py-2">Amount</th>
+            <th class="border px-3 py-2">Event</th>
+            <th class="border px-3 py-2">Date</th>
+          </tr>
+        </thead>
+        <tbody id="reportBody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
 
-  <!-- Data Simulation -->
-  <script>
-    // Simulated totals from storage (replace later with actual storage)
-    const donations = JSON.parse(localStorage.getItem("donations")) || [];
-    const expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+<script>
+  const eventSelect = document.getElementById('eventSelect');
+  const reportBody = document.getElementById('reportBody');
+  const donationTotal = document.getElementById('donationTotal');
+  const expenseTotal = document.getElementById('expenseTotal');
+  const balanceTotal = document.getElementById('balanceTotal');
 
-    const totalDonationAmount = donations.reduce((sum, d) => sum + Number(d.amount), 0);
-    const totalExpenseAmount = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
-    const balance = totalDonationAmount - totalExpenseAmount;
+  async function loadEvents() {
+    const res = await fetch('/api/events');
+    const events = await res.json();
+    events.forEach(ev => {
+      const opt = document.createElement('option');
+      opt.value = ev.name;
+      opt.textContent = ev.name;
+      eventSelect.appendChild(opt);
+    });
+  }
 
-    document.getElementById("totalDonations").textContent = `₹${totalDonationAmount}`;
-    document.getElementById("totalExpenses").textContent = `₹${totalExpenseAmount}`;
-    document.getElementById("balance").textContent = `₹${balance}`;
-  </script>
+  async function loadReports() {
+    const eventName = eventSelect.value;
 
+    const [donations, expenses] = await Promise.all([
+      fetch('/api/donations').then(res => res.json()),
+      fetch('/api/expenses').then(res => res.json())
+    ]);
+
+    const filteredDonations = donations.filter(d => !eventName || d.event === eventName);
+    const filteredExpenses = expenses.filter(e => !eventName || e.event === eventName);
+
+    let dTotal = 0, eTotal = 0;
+    reportBody.innerHTML = '';
+
+    filteredDonations.forEach(d => {
+      dTotal += parseFloat(d.amount || 0);
+      reportBody.innerHTML += `
+        <tr class="bg-green-50">
+          <td class="border px-3 py-2">Donation</td>
+          <td class="border px-3 py-2">${d.name}</td>
+          <td class="border px-3 py-2">₹${d.amount}</td>
+          <td class="border px-3 py-2">${d.event || ''}</td>
+          <td class="border px-3 py-2">${d.date || ''}</td>
+        </tr>
+      `;
+    });
+
+    filteredExpenses.forEach(e => {
+      eTotal += parseFloat(e.amount || 0);
+      reportBody.innerHTML += `
+        <tr class="bg-red-50">
+          <td class="border px-3 py-2">Expense</td>
+          <td class="border px-3 py-2">${e.purpose}</td>
+          <td class="border px-3 py-2">₹${e.amount}</td>
+          <td class="border px-3 py-2">${e.event || ''}</td>
+          <td class="border px-3 py-2">${e.date || ''}</td>
+        </tr>
+      `;
+    });
+
+    donationTotal.textContent = dTotal.toFixed(2);
+    expenseTotal.textContent = eTotal.toFixed(2);
+    balanceTotal.textContent = (dTotal - eTotal).toFixed(2);
+  }
+
+  function exportToExcel() {
+    const table = document.querySelector("table");
+    const html = table.outerHTML.replace(/ /g, '%20');
+    const url = 'data:application/vnd.ms-excel,' + html;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `temple_report_${new Date().toISOString().slice(0, 10)}.xls`;
+    a.click();
+  }
+
+  eventSelect.addEventListener('change', loadReports);
+  window.addEventListener('DOMContentLoaded', () => {
+    loadEvents().then(loadReports);
+  });
+</script>
 </body>
 </html>
