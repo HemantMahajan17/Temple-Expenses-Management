@@ -1,165 +1,149 @@
+# 🛕 Temple Management Backend
 
-# Temple Management Backend
-
-## Overview
-
-This backend is built with Node.js and Express to support the temple website management system. It provides REST APIs for managing donations, donors, expenses, events, reports, and user authentication including password management.
+A backend system built with **Node.js** and **Express** to power a temple website management platform. It offers RESTful APIs for managing **donations**, **donors**, **expenses**, **events**, **reports**, and **user authentication**, including a secure password reset mechanism.
 
 ---
 
-## Features
+## ✨ Features
 
-### User Authentication & Profile
-- Login with username + password or mobile number.
-- Mobile login supports password reset flow.
-- Password reset requires users to set a new password before continuing.
-- User profile management for viewing and updating password.
+### 🔐 User Authentication & Profile
+- Login via **username + password** or **mobile number**.
+- **Mobile login** supports password reset flow.
+- Password reset requires users to set a new password before proceeding.
+- **Profile page** to view and update password securely.
 
-### CRUD Operations for Temple Data
-- Donations, Donors, Expenses (with image upload), Events, and Reports.
-- Each entity supports Create, Read, Update, Delete operations.
-- Expenses support image uploads using Multer.
+### 📁 CRUD Operations
+Manage core temple data:
+- **Donations**
+- **Donors**
+- **Expenses** (with image upload via Multer)
+- **Events**
+- **Reports**
 
-### Derived Reports
-- Aggregate donor reports with filtering by event.
+Each supports **Create, Read, Update, Delete** operations.
 
----
-
-## API Routes
-
-| Route                     | Method | Description                                               |
-|---------------------------|--------|-----------------------------------------------------------|
-| `/api/login`              | POST   | Login with username/password or mobile number (with reset option) |
-| `/api/users`              | GET    | Get all users                                             |
-| `/api/users`              | POST   | Create a new user                                         |
-| `/api/users/:id`          | PUT    | Update user info (e.g. password)                          |
-| `/api/donations`          | CRUD   | Manage donations                                          |
-| `/api/donors`             | CRUD   | Manage donors                                             |
-| `/api/expenses`           | CRUD   | Manage expenses (with image upload support)              |
-| `/api/events`             | CRUD   | Manage events                                            |
-| `/api/reports`            | CRUD   | Manage reports                                           |
-| `/api/derived-donors`     | GET    | Aggregate donor report, filterable by event               |
+### 📊 Derived Reports
+- Aggregate donor reports with **event-based filtering**.
 
 ---
 
-## Password Reset Flow
+## 🧭 API Routes
 
-1. User attempts login via mobile number.
+| Endpoint                  | Method(s) | Description                                                  |
+|---------------------------|-----------|--------------------------------------------------------------|
+| `/api/login`              | POST      | Login with username/password or mobile number (reset flow)   |
+| `/api/users`              | GET, POST | Get all users / Create a new user                            |
+| `/api/users/:id`          | PUT       | Update user info (e.g., password)                            |
+| `/api/donations`          | CRUD      | Manage donations                                              |
+| `/api/donors`             | CRUD      | Manage donors                                                 |
+| `/api/expenses`           | CRUD      | Manage expenses with image upload                             |
+| `/api/events`             | CRUD      | Manage events                                                 |
+| `/api/reports`            | CRUD      | Manage reports                                                |
+| `/api/derived-donors`     | GET       | Aggregate donor report, filterable by event                  |
+
+---
+
+## 🔁 Password Reset Flow
+
+1. User attempts login via **mobile number**.
 2. Backend verifies the mobile number.
-3. Backend responds requiring password reset.
-4. User sets new password via profile/password reset form (`PUT /api/users/:id`).
-5. User logs in again using the new password.
+3. User is prompted to **reset the password**.
+4. User updates password via `PUT /api/users/:id`.
+5. User logs in again using the **new password**.
 
 ---
 
-## Backend Setup Instructions
+## ⚙️ Setup Instructions
 
-1. Clone the repository.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/temple-management-backend.git
+   cd temple-management-backend
+   ```
+
 2. Install dependencies:
-
    ```bash
    npm install
-````
+   ```
 
-3. Start the server:
-
+3. Start the backend server:
    ```bash
    node backend/server.js
    ```
 
-4. Server runs at: [http://localhost:5000](http://localhost:5000)
+4. Visit: [http://localhost:5000](http://localhost:5000)
 
 ---
 
-## Frontend Integration Notes
+## 🔗 Frontend Integration Notes
 
-* Ensure login and password reset requests include proper JSON headers:
-
+- Set JSON headers in all API requests:
   ```javascript
-  headers: { "Content-Type": "application/json" }
+  headers: {
+    "Content-Type": "application/json"
+  }
   ```
 
-* Password update API requires user ID in URL and JSON body with new password:
-
+- Example password update request:
   ```json
   {
     "password": "newPassword123"
   }
   ```
 
-* After password reset, clear any saved login sessions/localStorage and redirect to login page.
+- After reset, **clear saved session/localStorage** and redirect to login.
 
 ---
 
-## Important Notes
+## ⚠️ Important Notes
 
-* User passwords are stored in plaintext in `users.json` for simplicity. For production, implement proper password hashing.
-* The server uses local JSON files (`data/*.json`) for storage.
-* Multer is used for image uploads on the expenses API.
-* Static files served from `/public` and `/admin` folders.
-
----
-
-## Contact
-
-For issues, feature requests or contributions, please contact:
-
-Hemant Pramod Mahajan
-Email: hpmahajan2013@gmail.com
+- **Passwords are stored in plaintext** in `users.json` (for demo).  
+  🔐 **Implement hashing** for production.
+- Uses local storage with `data/*.json` files.
+- Static files served from `/public` and `/admin`.
+- Expense images are uploaded using **Multer**.
 
 ---
 
-*Last updated: May 2025*
+## 📧 Contact
 
+**Hemant Pramod Mahajan**  
+📧 Email: [hpmahajan2013@gmail.com](mailto:hpmahajan2013@gmail.com)
 
+---
 
-## 📸 Screenshots
+## 🖼️ Screenshots
 
 ### ✅ Admin Dashboard  
 ![Admin Dashboard](assets/images/docs/screenshots/Admin%20Dashboard.png)
 
----
-
 ### 💰 Donation Entry  
-**Donation Page 1**  
+**Page 1**  
 ![Donation Page 1](assets/images/docs/screenshots/Donation%20Page1.png)  
-
-**Donation Page 2**  
+**Page 2**  
 ![Donation Page 2](assets/images/docs/screenshots/Donation%20Page2.png)
 
----
-
 ### 👥 Donors Summary  
-![Donors Summary Page](assets/images/docs/screenshots/Donors%20Summary%20Page.png)
-
----
+![Donors Summary](assets/images/docs/screenshots/Donors%20Summary%20Page.png)
 
 ### 💸 Expenses Page  
 ![Expenses Page](assets/images/docs/screenshots/Expenses.png)
 
----
-
 ### 🔐 Login Page  
 ![Login Page](assets/images/docs/screenshots/login-page.png)
-
----
 
 ### 🧑‍💼 Users Panel  
 ![Users Panel](assets/images/docs/screenshots/Temple%20Admin%20Panel%20-%20Users%20P.png)
 
----
-
 ### 📅 Events Page  
-![Temple Events Page](assets/images/docs/screenshots/Temple%20Events%20Page.png)
-
----
+![Events Page](assets/images/docs/screenshots/Temple%20Events%20Page.png)
 
 ### 📊 Reports Page  
-![Temple Reports Page](assets/images/docs/screenshots/Temple%20Repots%20page%20.png)
+![Reports Page](assets/images/docs/screenshots/Temple%20Repots%20page%20.png)
+
+### 🙋‍♂️ User Profile Page  
+![Profile Page](assets/images/docs/screenshots/user%20profile%20page.png)
 
 ---
 
-### 🙋‍♂️ User Profile Page  
-![User Profile Page](assets/images/docs/screenshots/user%20profile%20page.png)
-
-
+📅 **Last updated: May 2025**
