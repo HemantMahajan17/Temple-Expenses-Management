@@ -111,3 +111,55 @@ Email: hpmahajan2013@gmail.com
 
 *Last updated: May 2025*
 
+
+
+## 📸 Screenshots
+
+### ✅ Admin Dashboard  
+![Admin Dashboard](assets/images/docs/screenshots/Admin%20Dashboard.png)
+
+---
+
+### 💰 Donation Entry  
+**Donation Page 1**  
+![Donation Page 1](assets/images/docs/screenshots/Donation%20Page1.png)  
+
+**Donation Page 2**  
+![Donation Page 2](assets/images/docs/screenshots/Donation%20Page2.png)
+
+---
+
+### 👥 Donors Summary  
+![Donors Summary Page](assets/images/docs/screenshots/Donors%20Summary%20Page.png)
+
+---
+
+### 💸 Expenses Page  
+![Expenses Page](assets/images/docs/screenshots/Expenses.png)
+
+---
+
+### 🔐 Login Page  
+![Login Page](assets/images/docs/screenshots/login-page.png)
+
+---
+
+### 🧑‍💼 Users Panel  
+![Users Panel](assets/images/docs/screenshots/Temple%20Admin%20Panel%20-%20Users%20P.png)
+
+---
+
+### 📅 Events Page  
+![Temple Events Page](assets/images/docs/screenshots/Temple%20Events%20Page.png)
+
+---
+
+### 📊 Reports Page  
+![Temple Reports Page](assets/images/docs/screenshots/Temple%20Repots%20page%20.png)
+
+---
+
+### 🙋‍♂️ User Profile Page  
+![User Profile Page](assets/images/docs/screenshots/user%20profile%20page.png)
+
+
