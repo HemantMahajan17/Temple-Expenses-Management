@@ -7,18 +7,17 @@ const cors = require('cors');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 
-const app = express();
+const app = express(); // ✅ defined before use
 const PORT = 5000;
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Static files serving
 app.use('/', express.static(path.join(__dirname, '../public')));
 app.use('/admin', express.static(path.join(__dirname, '../admin')));
 
-// Multer setup for file uploads
+// Multer setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const dir = path.join(__dirname, 'uploads');
@@ -31,7 +30,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Helper functions to read and write JSON files
+// Helper functions
 const readData = (filename) => {
   const filePath = path.join(__dirname, 'data', filename);
   if (!fs.existsSync(filePath)) return [];
@@ -43,12 +42,7 @@ const writeData = (filename, data) => {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 };
 
-// Hardcoded users
-const users = [
-  { username: "admin", password: "temple123" }
-];
-
-// CRUD utility function
+// CRUD Utility Function
 function setupCrudRoutes(entityName, uploadFile = false) {
   const filename = `${entityName}.json`;
 
@@ -88,18 +82,16 @@ function setupCrudRoutes(entityName, uploadFile = false) {
 
   app.put(`/api/${entityName}/:id`, (req, res) => {
     const data = readData(filename);
-    const id = req.params.id;
-    const index = data.findIndex(i => i.id === id);
+    const index = data.findIndex(i => i.id === req.params.id);
     if (index === -1) return res.status(404).json({ message: `${entityName.slice(0,-1)} not found` });
-    data[index] = { id, ...req.body };
+    data[index] = { id: req.params.id, ...req.body };
     writeData(filename, data);
     res.json({ message: `${entityName.slice(0,-1)} updated` });
   });
 
   app.delete(`/api/${entityName}/:id`, (req, res) => {
     const data = readData(filename);
-    const id = req.params.id;
-    const index = data.findIndex(i => i.id === id);
+    const index = data.findIndex(i => i.id === req.params.id);
     if (index === -1) return res.status(404).json({ message: `${entityName.slice(0,-1)} not found` });
     data.splice(index, 1);
     writeData(filename, data);
@@ -107,7 +99,7 @@ function setupCrudRoutes(entityName, uploadFile = false) {
   });
 }
 
-// CRUD routes
+// Setup routes
 setupCrudRoutes('donations');
 setupCrudRoutes('donors');
 setupCrudRoutes('expenses', true);
@@ -141,20 +133,82 @@ app.get('/api/derived-donors', (req, res) => {
   res.json(Array.from(donorMap.values()));
 });
 
-// Login
+
+
+// 🔐 Enhanced LOGIN with mobile fallback and password reset
 app.post('/api/login', (req, res) => {
-  const { username, password } = req.body;
-  const user = users.find(u => u.username === username && u.password === password);
-  if (!user) return res.status(401).json({ message: 'Invalid credentials' });
-  res.json({ message: 'Login successful' });
+  const { username, password, mobile, resetPassword } = req.body;
+  const users = readData('users.json');
+
+  // 1. Normal login by username + password
+  if (username && password) {
+    const user = users.find(u => u.username === username && u.password === password);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials. Please contact admin for password.' });
+    }
+    return res.json({ message: 'Login successful', user });
+  }
+
+  // 2. Login using mobile (for password reset)
+  if (mobile) {
+    const user = users.find(u => u.mobile === mobile);
+    if (!user) {
+      return res.status(404).json({ message: 'Mobile number not found. Contact admin.' });
+    }
+
+    if (resetPassword) {
+      // Set new password
+      user.password = resetPassword;
+      writeData('users.json', users);
+      return res.json({ message: 'Password reset successful. Please log in again.' });
+    } else {
+      // First mobile login: force password reset
+      return res.json({ message: 'Mobile verified. Please reset your password.', user, needsReset: true });
+    }
+  }
+
+  // 3. Fallback
+  res.status(400).json({ message: 'Invalid request. Provide either username+password or mobile.' });
 });
 
-// Root
+  // Update user by ID (for password change)
+app.put('/api/users/:id', (req, res) => {
+  const users = readData('users.json');
+  const userId = req.params.id;
+  const userIndex = users.findIndex(u => u.id === userId);
+  if (userIndex === -1) return res.status(404).json({ message: 'User not found' });
+
+  const { password, mobile, ...otherFields } = req.body;
+
+  // Update password if provided
+  if (password) {
+    users[userIndex].password = password;
+  }
+
+  // Optionally update mobile or other fields here if needed
+
+  writeData('users.json', users);
+
+  res.json({ message: 'User updated successfully' });
+});
+
+
+
+// 👤 USERS - POST
+app.post('/api/users', (req, res) => {
+  const users = readData('users.json');
+  const newUser = { id: `u${Date.now()}`, ...req.body };
+  users.push(newUser);
+  writeData('users.json', users);
+  res.status(201).json({ message: 'User created', user: newUser });
+});
+
+// ✅ Root Route
 app.get("/", (req, res) => {
   res.send("✅ Temple Management Backend is Running");
 });
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`✅ Server running on http://localhost:${PORT}`);
 });

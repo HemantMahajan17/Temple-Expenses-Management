@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>User Profile - Change Password</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 400px;
+      margin: 30px auto;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #f9f9f9;
+    }
+    h2 {
+      text-align: center;
+      color: #2774AE;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 4px;
+      border: 1px solid #aaa;
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 10px;
+      background-color: #2774AE;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover {
+      background-color: #1e5a80;
+    }
+    #message {
+      margin-top: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .back-link {
+      display: block;
+      margin-top: 25px;
+      text-align: center;
+      color: #2774AE;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>User Profile</h2>
+
+  <div>
+    <strong>Username:</strong> <span id="username"></span><br/>
+    <strong>Mobile:</strong> <span id="mobile"></span>
+  </div>
+
+  <form id="passwordForm">
+    <label for="newPassword">New Password</label>
+    <input id="newPassword" type="password" required minlength="6" placeholder="Enter new password" />
+
+    <label for="confirmPassword">Confirm Password</label>
+    <input id="confirmPassword" type="password" required minlength="6" placeholder="Confirm new password" />
+
+    <button type="submit">Update Password</button>
+  </form>
+
+  <div id="message"></div>
+
+  <a href="/admin/dashboard.html" class="back-link">Back to Dashboard</a>
+
+  <script>
+    // Get logged user from localStorage
+    const loggedUser = JSON.parse(localStorage.getItem('loggedUser'));
+    if (!loggedUser) {
+      alert('Please login first');
+      window.location.href = '/admin/login.html';
+    } else {
+      document.getElementById('username').textContent = loggedUser.username;
+      document.getElementById('mobile').textContent = loggedUser.mobile || 'N/A';
+    }
+
+    // Handle form submission to update password
+    document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const newPassword = document.getElementById('newPassword').value.trim();
+      const confirmPassword = document.getElementById('confirmPassword').value.trim();
+      const messageDiv = document.getElementById('message');
+
+      messageDiv.style.color = 'red';
+
+      if (newPassword.length < 6) {
+        messageDiv.textContent = 'Password must be at least 6 characters.';
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        messageDiv.textContent = 'Passwords do not match.';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/users/${loggedUser.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: newPassword })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          messageDiv.style.color = 'green';
+          messageDiv.textContent = 'Password updated successfully. Please log in again.';
+
+          // Clear stored user data and redirect to login after 2 seconds
+          setTimeout(() => {
+            localStorage.removeItem('loggedUser');
+            window.location.href = '/admin/login.html';
+          }, 2000);
+        } else {
+          messageDiv.textContent = data.message || 'Error updating password.';
+        }
+      } catch (err) {
+        messageDiv.textContent = 'Server error: ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html>

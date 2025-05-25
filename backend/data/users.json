@@ -1,0 +1,16 @@
+[
+  {
+    "username": "admin",
+    "password": "admin123",
+    "name": "Temple Admin",
+    "contact": "9876543210",
+    "role": "admin"
+  },
+  {
+    "username": "priest",
+    "password": "omnamahshivaya",
+    "name": "Head Priest",
+    "contact": "9999999999",
+    "role": "user"
+  }
+]

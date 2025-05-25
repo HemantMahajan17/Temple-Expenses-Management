@@ -1,184 +1,113 @@
 
+# Temple Management Backend
 
+## Overview
 
-# Temple Website Management System - Expenses Module
-
-This project is part of a **Temple Management System** that allows temple administrators to manage expenses, donations, events, and more. This module focuses on **Expense Management** with the ability to add, edit, delete expenses, upload receipt images, and view them in a list.
+This backend is built with Node.js and Express to support the temple website management system. It provides REST APIs for managing donations, donors, expenses, events, reports, and user authentication including password management.
 
 ---
 
 ## Features
 
-- Add new expenses with:
-  - Title
-  - Amount (₹)
-  - Date
-  - Notes (optional)
-  - Receipt Image (optional upload)
-- View all expenses in a table including receipt image thumbnails.
-- Edit existing expenses.
-- Delete expenses.
-- User login system to restrict admin pages.
-- Responsive UI built with Tailwind CSS.
-- Data persistence with backend API (Node.js + Express).
-- Image upload and serving via backend.
+### User Authentication & Profile
+- Login with username + password or mobile number.
+- Mobile login supports password reset flow.
+- Password reset requires users to set a new password before continuing.
+- User profile management for viewing and updating password.
+
+### CRUD Operations for Temple Data
+- Donations, Donors, Expenses (with image upload), Events, and Reports.
+- Each entity supports Create, Read, Update, Delete operations.
+- Expenses support image uploads using Multer.
+
+### Derived Reports
+- Aggregate donor reports with filtering by event.
 
 ---
 
-## Folder Structure
+## API Routes
 
-```
-
-/admin/                   # Admin panel for temple members (after login)
-├── dashboard.html      # Admin dashboard page
-├── expenses.html       # Expense management page
-├── donations.html      # Donations management (future)
-/assets/
-├── css/                # Stylesheets
-├── images/             # Static images
-/public/                  # Public-facing website pages
-├── index.html          # Homepage
-├── about.html          # About temple page
-├── contact.html        # Contact page
-├── events.html         # Events info page
-├── gaushala.html       # Gaushala page
-├── upcoming.html       # Upcoming events page
-/backend/                 # Backend Node.js API server
-├── server.js           # Main server code
-├── package.json
-├── /uploads            # Uploaded images storage (created dynamically)
-
-````
+| Route                     | Method | Description                                               |
+|---------------------------|--------|-----------------------------------------------------------|
+| `/api/login`              | POST   | Login with username/password or mobile number (with reset option) |
+| `/api/users`              | GET    | Get all users                                             |
+| `/api/users`              | POST   | Create a new user                                         |
+| `/api/users/:id`          | PUT    | Update user info (e.g. password)                          |
+| `/api/donations`          | CRUD   | Manage donations                                          |
+| `/api/donors`             | CRUD   | Manage donors                                             |
+| `/api/expenses`           | CRUD   | Manage expenses (with image upload support)              |
+| `/api/events`             | CRUD   | Manage events                                            |
+| `/api/reports`            | CRUD   | Manage reports                                           |
+| `/api/derived-donors`     | GET    | Aggregate donor report, filterable by event               |
 
 ---
 
-## Backend Setup
+## Password Reset Flow
 
-The backend is built using **Node.js** and **Express**. It provides RESTful APIs for expenses management, including image upload support.
+1. User attempts login via mobile number.
+2. Backend verifies the mobile number.
+3. Backend responds requiring password reset.
+4. User sets new password via profile/password reset form (`PUT /api/users/:id`).
+5. User logs in again using the new password.
 
-### Prerequisites
+---
 
-- Node.js v14+ installed
-- npm installed
+## Backend Setup Instructions
 
-### Installation and Running
-
-1. Navigate to the backend folder:
-
-   ```bash
-   cd backend
-````
-
+1. Clone the repository.
 2. Install dependencies:
 
    ```bash
    npm install
-   ```
+````
 
 3. Start the server:
 
    ```bash
-   node server.js
+   node backend/server.js
    ```
 
-4. The backend server will start on `http://localhost:5000/`
+4. Server runs at: [http://localhost:5000](http://localhost:5000)
 
 ---
 
-## Frontend Setup
+## Frontend Integration Notes
 
-The frontend consists of HTML, CSS, and JavaScript files served as static files.
+* Ensure login and password reset requests include proper JSON headers:
 
-### Serving frontend files
+  ```javascript
+  headers: { "Content-Type": "application/json" }
+  ```
 
-You can open the HTML files directly in your browser or serve them using a local HTTP server (recommended).
+* Password update API requires user ID in URL and JSON body with new password:
 
-To serve from a local server (optional):
+  ```json
+  {
+    "password": "newPassword123"
+  }
+  ```
 
-```bash
-# From the project root or public folder, you can run:
-npx serve public
-```
-
-Or use VS Code Live Server extension.
-
----
-
-## Authentication (Login)
-
-* The admin panel pages (`/admin/*`) require login.
-* Login status is managed via `localStorage` key `isLoggedIn`.
-* Login page is at `/admin/login.html`.
-* After successful login, `localStorage.setItem('isLoggedIn', 'true')` is set.
-* On logout, the key is removed and user is redirected to login page.
+* After password reset, clear any saved login sessions/localStorage and redirect to login page.
 
 ---
 
-## API Endpoints
+## Important Notes
 
-| Method | Endpoint            | Description                             |
-| ------ | ------------------- | --------------------------------------- |
-| GET    | `/api/expenses`     | Fetch all expenses                      |
-| POST   | `/api/expenses`     | Add new expense (supports image upload) |
-| PUT    | `/api/expenses/:id` | Update expense by ID                    |
-| DELETE | `/api/expenses/:id` | Delete expense by ID                    |
-
----
-
-## Usage
-
-* Login to admin panel.
-* Go to `expenses.html`.
-* Add new expenses via form.
-* View expenses list below the form.
-* Edit or delete existing expenses via action buttons.
-* Uploaded images show as thumbnails in the expenses list.
-* Logout from the dashboard.
-
----
-
-## Technologies Used
-
-* **Frontend**: HTML5, CSS3, JavaScript, Tailwind CSS
-* **Backend**: Node.js, Express, multer (for file uploads)
-* **Storage**: In-memory or file-based image storage in `/backend/uploads`
-* **Others**: LocalStorage for session check on frontend
-
----
-
-## Future Enhancements
-
-* Add persistent database (MongoDB, MySQL).
-* Implement role-based authentication.
-* Add reports and export options.
-* Improve UI/UX for mobile responsiveness.
-* Add other modules (Donations, Events, Donors).
-* Deploy to cloud or hosting platform.
-
----
-
-## How to Contribute
-
-* Fork the repo
-* Create a new branch
-* Add your feature or bugfix
-* Submit a pull request
-
----
-
-## License
-
-MIT License © Hemant Pramod Mahajan
+* User passwords are stored in plaintext in `users.json` for simplicity. For production, implement proper password hashing.
+* The server uses local JSON files (`data/*.json`) for storage.
+* Multer is used for image uploads on the expenses API.
+* Static files served from `/public` and `/admin` folders.
 
 ---
 
 ## Contact
 
-Email: [hpmahajan2013@gmail.com](mailto:hpmahajan2013@gmail.com)
+For issues, feature requests or contributions, please contact:
 
-
----
-
-Thank you for using the Temple Management System!
+Hemant Pramod Mahajan
+Email: hpmahajan2013@gmail.com
 
 ---
+
+*Last updated: May 2025*
+

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manage Users | Temple Admin Panel</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+
+  <!-- Access Control -->
+ <script>
+  const loggedUser = JSON.parse(localStorage.getItem("loggedUser"));
+  if (!loggedUser || loggedUser.role !== "admin") {
+    // Just redirect without alert
+    window.location.href = "/admin/dashboard.html";
+  }
+</script>
+
+
+  <!-- Header -->
+  <div class="bg-blue-800 text-white p-4 flex justify-between items-center">
+    <h1 class="text-2xl font-bold">Temple Admin Panel - Users</h1>
+    <div>
+      Logged in as: <span class="font-semibold" id="loggedUsername"></span>
+       <a href="dashboard.html" class="hover:underline">Back to Dashboard</a>
+    </div>
+  </div>
+
+  <div class="max-w-4xl mx-auto mt-8 bg-white p-6 rounded shadow">
+
+    <!-- User List -->
+    <h2 class="text-xl font-bold mb-4">All Users</h2>
+    <table class="w-full border border-gray-300 mb-6">
+      <thead>
+        <tr class="bg-gray-100 text-left">
+          <th class="p-2 border">Username</th>
+          <th class="p-2 border">Full Name</th>
+          <th class="p-2 border">Contact</th>
+          <th class="p-2 border">Role</th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody"></tbody>
+    </table>
+
+    <!-- Add User Form -->
+    <h2 class="text-xl font-bold mb-4">Add New User</h2>
+    <form id="userForm" class="grid grid-cols-1 gap-4">
+      <input type="text" id="username" placeholder="Username" required class="border p-2 rounded" />
+      <input type="password" id="password" placeholder="Password" required class="border p-2 rounded" />
+      <input type="text" id="name" placeholder="Full Name" required class="border p-2 rounded" />
+      <input type="text" id="contact" placeholder="Contact Number" required class="border p-2 rounded" />
+      <select id="role" required class="border p-2 rounded">
+        <option value="">Select Role</option>
+        <option value="admin">Admin</option>
+        <option value="member">Member</option>
+      </select>
+      <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Add User</button>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Show logged in user
+      const loggedUser = JSON.parse(localStorage.getItem("loggedUser"));
+      if (loggedUser) {
+        document.getElementById("loggedUsername").textContent = loggedUser.username;
+      }
+
+      // Fetch and display all users
+      fetch('/api/users')
+        .then(res => res.json())
+        .then(users => {
+          const tbody = document.getElementById('userTableBody');
+          tbody.innerHTML = '';
+          users.forEach(user => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td class="p-2 border">${user.username}</td>
+              <td class="p-2 border">${user.name}</td>
+              <td class="p-2 border">${user.contact}</td>
+              <td class="p-2 border">${user.role}</td>
+            `;
+            tbody.appendChild(row);
+          });
+        });
+    });
+
+    // Add new user
+    document.getElementById('userForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const newUser = {
+        username: document.getElementById('username').value,
+        password: document.getElementById('password').value,
+        name: document.getElementById('name').value,
+        contact: document.getElementById('contact').value,
+        role: document.getElementById('role').value
+      };
+
+      fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newUser)
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message);
+        location.reload();
+      });
+    });
+
+    function logout() {
+      localStorage.removeItem("loggedUser");
+      window.location.href = "/public/login.html";
+    }
+  </script>
+</body>
+</html>
+
